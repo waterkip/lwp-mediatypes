@@ -10,19 +10,23 @@ my $url2 = URI->new('http:test');
 
 my $file = "./README";
 
-my @tests =
-(
- ["/this.dir/file.html" => "text/html",],
- ["test.gif.htm"        => "text/html",],
- ["test.txt.gz"         => "text/plain", "gzip"],
- ["gif.foo"             => "application/octet-stream",],
- ["lwp-0.03.tar.Z"      => "application/x-tar", "compress"],
- [$file		        => "text/plain",],
- ["/random/file"        => "application/octet-stream",],
- [($^O eq 'VMS'? "nl:" : "/dev/null") => "text/plain",],
- [$url1	        	=> "image/gif",],
- [$url2	        	=> "application/octet-stream",],
- ["x.ppm.Z.UU"		=> "image/x-portable-pixmap","compress","x-uuencode",],
+my $nocando = TestNoCanDo->new();
+my $fh = TestFileTemp->new();
+
+my @tests = (
+    ["/this.dir/file.html" => "text/html",],
+    ["test.gif.htm"        => "text/html",],
+    ["test.txt.gz"         => "text/plain", "gzip"],
+    ["gif.foo"             => "application/octet-stream",],
+    ["lwp-0.03.tar.Z"      => "application/x-tar", "compress"],
+    [$file                 => "text/plain",],
+    ["/random/file"        => "application/octet-stream",],
+    [($^O eq 'VMS' ? "nl:" : "/dev/null") => "text/plain",],
+    [$url1 => "image/gif",],
+    [$url2 => "application/octet-stream",],
+    ["x.ppm.Z.UU" => "image/x-portable-pixmap", "compress", "x-uuencode",],
+    [$fh          => "text/plain",],
+    [$nocando     => "text/plain",],
 );
 
 plan tests => @tests * 3 + 6;
@@ -107,5 +111,30 @@ BEGIN {
 	}
 	return $old;
     }
+
+    package TestNoCanDo;
+
+    sub new {
+        my $class = shift;
+        return bless {}, $class;
+    }
+
+    sub to_string {
+        return "./README"
+    }
+
+    use overload '""' => 'to_string';
+
+    package TestFileTemp;
+
+    sub new {
+        my $class = shift;
+        return bless {}, $class;
+    }
+
+    sub filename {
+        return "./README"
+    }
+
 }
 
